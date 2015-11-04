@@ -18,6 +18,4 @@ public class BaseDaoImpl<T, ID extends java.io.Serializable> extends GenericDAOI
     public void setSessionFactory(SessionFactory sessionFactory) {
         super.setSessionFactory(sessionFactory);
     }
-
-
 }
