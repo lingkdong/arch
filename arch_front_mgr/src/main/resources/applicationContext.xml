@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="
+	   http://www.springframework.org/schema/beans
+	   http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+	   http://www.springframework.org/schema/context
+	   http://www.springframework.org/schema/context/spring-context-3.0.xsd
+	   http://www.springframework.org/schema/tx
+	   http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+	   http://www.springframework.org/schema/aop
+	   http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
+
+    <context:component-scan base-package="com.carl">
+        <context:exclude-filter type="annotation"
+                                expression="org.springframework.stereotype.Controller" />
+    </context:component-scan>
+
+    <bean id="propertyPlaceholderConfigurer"
+          class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath:properties/jdbc.properties</value>
+                <value>classpath:properties/hibernate.properties</value>
+            </list>
+        </property>
+        <property name="ignoreUnresolvablePlaceholders" value="true"/>
+    </bean>
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+        <property name="driverClass" value="${jdbc.driver}"/>
+        <property name="jdbcUrl" value="${jdbc.url}"/>
+        <property name="user" value="${jdbc.user}"/>
+        <property name="password" value="${jdbc.password}"/>
+        <property name="minPoolSize" value="${jdbc.minpoolsize}"/>
+        <property name="maxPoolSize" value="${jdbc.maxpoolsize}"/>
+        <property name="initialPoolSize" value="${jdbc.initialpoolsize}"/>
+        <property name="acquireIncrement" value="${jdbc.acquireincrement}"/>
+        <property name="maxIdleTime" value="${jdbc.maxidletime}"/>
+        <property name="idleConnectionTestPeriod" value="${jdbc.idleconnectiontestperiod}"/>
+        <property name="maxStatements" value="${jdbc.maxstatements}"/>
+        <property name="acquireRetryAttempts" value="${jdbc.acquireRetryAttempts}"/>
+        <property name="testConnectionOnCheckout" value="true"/>
+    </bean>
+    <bean id="sessionFactory" class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean"
+          scope="singleton">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="hibernateProperties">
+            <props>
+                <prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>
+                <prop key="hibernate.show_sql">${hibernate.showSql}</prop>
+                <prop key="hibernate.format_sql">${hibernate.format_sql}</prop>
+                <prop key="hibernate.hbm2ddl.auto">${hibernate.hbm2ddl.auto}</prop>
+                <prop key="hibernate.jdbc.batch_size">${hibernate.jdbc.batch_size}</prop>
+                <prop key="hibernate.max_fetch_depth">${hibernate.max_fetch_depth}</prop>
+                <prop key="hibernate.default_batch_fetch_size">${hibernate.default_batch_fetch_size}</prop>
+                <prop key="hibernate.jdbc.fetch_size">${hibernate.jdbc.fetch_size}</prop>
+                <!--<prop key="hibernate.cache.provider_class">${hibernate.cache.provider_class}</prop>-->
+                <!--<prop key="hibernate.cache.use_query_cache">${hibernate.cache.use_query_cache}</prop>-->
+            </props>
+        </property>
+        <property name="schemaUpdate" value="true"/>
+        <property name="namingStrategy">
+            <bean class="org.hibernate.cfg.ImprovedNamingStrategy"/>
+        </property>
+        <property name="packagesToScan">
+            <list>
+                <value>com.carl.arch.vo</value>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="transactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+        <property name="sessionFactory" ref="sessionFactory"/>
+        <property name="nestedTransactionAllowed" value="true"/>
+    </bean>
+
+    <bean id="jdbcExceptionTranslator" class="org.springframework.jdbc.support.SQLErrorCodeSQLExceptionTranslator">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean id="hibernateTemplate" class="org.springframework.orm.hibernate3.HibernateTemplate">
+        <property name="sessionFactory" ref="sessionFactory"/>
+        <!--<property name="cacheQueries" value="${hibernate.cache.use_query_cache}"></property>-->
+        <property name="jdbcExceptionTranslator" ref="jdbcExceptionTranslator"/>
+    </bean>
+
+    <tx:annotation-driven proxy-target-class="true" transaction-manager="transactionManager"/>
+
+
+</beans>
